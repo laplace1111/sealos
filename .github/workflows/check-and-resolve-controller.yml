@@ -1,5 +1,5 @@
 
-name: Check and resolve pushed controller code
+name: Check and resolve controller code
 
 on:
   push:

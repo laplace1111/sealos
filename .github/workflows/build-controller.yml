@@ -3,7 +3,7 @@ name: Build Controllers image
 
 on:
   workflow_run:
-    workflows: [Check and resolve pushed controller code]
+    workflows: [Check and resolve controller code]
     types:
       - completed
 
