@@ -1,37 +1,39 @@
 
-name: Build Controllers image
+name: Build controller image
 
 on:
-  workflow_run:
-    workflows: [Check and resolve controller code]
-    types:
-      - completed
-
+  workflow_call:
+    inputs:
+      push_image:
+        description: "Push image"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "Push image tag"
+        default: "latest"
+        required: false
+        type: string
 env:
-  # Common versions
   GO_VERSION: "1.22"
 jobs:
+  detect-module:
+    uses: ./.github/workflows/detect-controller-module.yml
+  run-linter:
+    needs: detect-module
+    uses: ./.github/workflows/golangci-lint.yml
+    with:
+      modules: ${{ needs.detect-module.outputs.modules }}
+      workdir: "controllers"
   image-build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: detect-module
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      packages: write
+      packages: ${{ inputs.push_image == true && 'write' || 'read' }}
     strategy:     
        matrix:
-        module:
-          - { name: user, path: user } #TODO: maybe we should detect modules with a script
-          # - { name: terminal, path: terminal }
-          # - { name: account, path: account }
-          # - { name: app, path: app }
-          # - { name: db-adminer, path: db/adminer }
-          # - { name: license, path: license }
-          # - { name: job-init, path: job/init }
-          # - { name: job-heartbeat, path: job/heartbeat }
-          # - { name: resources, path: resources }
-          # - { name: node, path: node }
-          # - { name: devbox, path: devbox}
-          # - { name: objectstorage, path: objectstorage }
+        module: ${{ needs.detect-module.outputs.modules }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,9 +80,11 @@ jobs:
       - name: Prepare
         id: prepare
         env:
+          PUSH_IMAGE: ${{ inputs.push_image }}
           IS_TAG: ${{ steps.check_tag.outputs.isTag }}
           REPO_OWNER: ${{ github.repository_owner }}
           MODULE_NAME: ${{ matrix.module.name }}
+          PUSH_IMAGE_TAG: ${{ inputs.push_image_tag }}
         run: |
           bash scripts/resolve-tag-image.sh "$PUSH_IMAGE" "$IS_TAG" "$PUSH_IMAGE_TAG"
           echo "docker_repo=ghcr.io/${REPO_OWNER}/sealos-${MODULE_NAME}-controller" >> $GITHUB_OUTPUT
@@ -115,7 +119,7 @@ jobs:
         with:
           context: ./controllers/${{ matrix.module.path }}
           file: ./controllers/${{ matrix.module.path }}/Dockerfile
-          push: true
+          push: ${{ inputs.push_image }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64

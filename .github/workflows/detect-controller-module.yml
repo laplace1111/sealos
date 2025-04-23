@@ -1,0 +1,22 @@
+name: Generate controller module matrix
+on:
+  workflow_call:
+    outputs:
+      modules:
+        description: "JSON array of modules"
+        value: ${{ jobs.generate-matrix.outputs.modules_json }}
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      modules_json: ${{ steps.set-output.outputs.modules_json }}
+    strategy:
+      matrix:
+        module:
+          - { name: user, path: user }  
+    steps:
+      - name: Export matrix as JSON
+        id: set-output
+        run: |
+          echo "modules_json=${{ toJSON(matrix.module) }}" >> $GITHUB_OUTPUT
