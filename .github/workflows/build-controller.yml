@@ -26,7 +26,7 @@ jobs:
       modules: ${{ needs.detect-module.outputs.modules }}
       workdir: "controllers"
   image-build:
-    needs: detect-module
+    needs: [detect-module, run-linter]
     runs-on: ubuntu-24.04
     permissions:
     # If calling by prs from forked repository, this job will not be granted any write permission, 
