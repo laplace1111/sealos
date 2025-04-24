@@ -35,7 +35,7 @@ jobs:
       packages: write
     strategy:
        matrix:
-        module: ${{ needs.detect-module.outputs.modules }}
+        module: ${{ fromJSON(needs.detect-module.outputs.modules) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
