@@ -14,7 +14,8 @@ jobs:
     strategy:
       matrix:
         module:
-          - { name: user, path: user }  
+          - { name: user, path: user }
+          - { name: terminal, path: terminal }
     steps:
       - name: Export matrix as JSON
         id: set-output
