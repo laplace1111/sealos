@@ -1,5 +1,5 @@
 
-name: Build controller image
+name: Build (and push) controllers
 
 on:
   workflow_call:
