@@ -1,0 +1,12 @@
+name:  Controller workflow entry after receiving push event
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "controllers/"
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/build-controller.yml
+    with:
+      needs_push: true

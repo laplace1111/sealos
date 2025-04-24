@@ -1,0 +1,12 @@
+name:  Controller workflow entry after receiving pull request event
+on:
+  pull_request:
+    branches: [ "*" ]
+    paths:
+      - "controllers/"
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/build-controller.yml
+    with:
+      needs_push: false

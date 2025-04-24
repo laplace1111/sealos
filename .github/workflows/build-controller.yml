@@ -4,13 +4,13 @@ name: Build controller image
 on:
   workflow_call:
     inputs:
-      push_image:
-        description: "Push image"
+      needs_push:
+        description: "Should we push after building?"
         required: false
         type: boolean
         default: false
       push_image_tag:
-        description: "Push image tag"
+        description: "The tag for the image to push"
         default: "latest"
         required: false
         type: string
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      packages: ${{ inputs.push_image == true && 'write' || 'read' }}
+      packages: ${{ inputs.needs_push == true && 'write' || 'read' }}
     strategy:     
        matrix:
         module: ${{ needs.detect-module.outputs.modules }}
@@ -80,7 +80,7 @@ jobs:
       - name: Prepare
         id: prepare
         env:
-          PUSH_IMAGE: ${{ inputs.push_image }}
+          PUSH_IMAGE: ${{ inputs.needs_push }}
           IS_TAG: ${{ steps.check_tag.outputs.isTag }}
           REPO_OWNER: ${{ github.repository_owner }}
           MODULE_NAME: ${{ matrix.module.name }}
@@ -119,7 +119,7 @@ jobs:
         with:
           context: ./controllers/${{ matrix.module.path }}
           file: ./controllers/${{ matrix.module.path }}/Dockerfile
-          push: ${{ inputs.push_image }}
+          push: ${{ inputs.needs_push }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64

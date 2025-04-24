@@ -1,0 +1,21 @@
+name:  Controller workflow entry after receiving workflow dispatch event
+on:
+  workflow_dispatch:
+    inputs:
+      needs_push:
+        description: "Should we push after building?"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "The tag for the image to push"
+        default: "latest"
+        required: false
+        type: string
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/build-controller.yml
+    with:
+      needs_push: ${{ inputs.needs_push }}
+      push_image_tag: ${{ inputs.push_image_tag }}
