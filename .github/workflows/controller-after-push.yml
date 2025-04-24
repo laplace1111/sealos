@@ -6,10 +6,11 @@ on:
       - "controllers/"
 
 jobs:
-  build-and-push:
+  start-workflow:
     permissions:
       contents: read
       packages: write
-    uses: ./.github/workflows/build-controller.yml
+    uses: ./.github/workflows/controller.yml
     with:
       needs_push: true
+      needs_cluster_image: true

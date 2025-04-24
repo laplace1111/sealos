@@ -1,0 +1,28 @@
+name: Fetch sealos
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        description: The sealos version to fetch
+        default: 4.1.7
+      artifact_name:
+        type: string
+        description: The name of the artifact to save
+        default: sealos
+
+jobs:
+  fetch-sealos:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install sealos
+        uses: labring/sealos-action@v0.0.7
+        with:
+          sealosVersion: ${{ inputs.version }}
+      - name: Save binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: /usr/bin/sealos
+          overwrite: true

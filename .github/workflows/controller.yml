@@ -1,0 +1,49 @@
+
+name: Controller workflow
+
+on:
+  workflow_call:
+    inputs:
+      needs_push:
+       # If this option is true, this workflow will push the images after building
+       # This option is required when building cluster images
+        description: "Should we push after building?"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "The tag for the image to push"
+        default: "latest"
+        required: false
+        type: string
+      needs_cluster_image:
+        description: "Should we create cluster images?"
+        required: false
+        type: boolean
+        default: false
+jobs:
+  detect-module:
+    uses: ./.github/workflows/detect-controller-module.yml
+  run-linter:
+    needs: detect-module
+    uses: ./.github/workflows/golangci-lint.yml
+    with:
+      modules: ${{ needs.detect-module.outputs.modules }}
+      workdir: "controllers"
+  build-controller-image:
+    needs: [detect-module, run-linter]
+    uses: ./.github/workflows/build-controller-image.yml
+    with:
+      modules: ${{ needs.detect-module.outputs.modules }}
+      workdir: "controllers"
+      needs_push: ${{ inputs.needs_push }}
+      push_image_tag: ${{ inputs.push_image_tag }}
+  build-controller-cluster-image:
+    if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
+    needs: [detect-module, build-controller-image]
+    uses: ./.github/workflows/build-controller-cluster-image.yml
+    with:
+      modules: ${{ needs.detect-module.outputs.modules }}
+      workdir: "controllers"
+      needs_push: ${{ inputs.needs_push }}
+      push_image_tag: ${{ inputs.push_image_tag }} 

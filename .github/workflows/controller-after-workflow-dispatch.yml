@@ -12,13 +12,18 @@ on:
         default: "latest"
         required: false
         type: string
-
+      needs_cluster_image:
+        description: "Should we create cluster images?"
+        required: false
+        type: boolean
+        default: false
 jobs:
-  build-and-push:
+  start-workflow:
     permissions:
         contents: read
         packages: write
-    uses: ./.github/workflows/build-controller.yml
+    uses: ./.github/workflows/controller.yml
     with:
       needs_push: ${{ inputs.needs_push }}
       push_image_tag: ${{ inputs.push_image_tag }}
+      needs_cluster_image: ${{ inputs.needs_cluster_image }}
