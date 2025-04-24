@@ -29,9 +29,11 @@ jobs:
     needs: detect-module
     runs-on: ubuntu-24.04
     permissions:
+    # If calling by prs from forked repository, this job will not be granted any write permission, 
+    # so it's safe if we set packages: write here
       contents: read
-      packages: ${{ inputs.needs_push == true && 'write' || 'read' }}
-    strategy:     
+      packages: write
+    strategy:
        matrix:
         module: ${{ needs.detect-module.outputs.modules }}
     steps:
