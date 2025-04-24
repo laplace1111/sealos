@@ -15,6 +15,9 @@ on:
 
 jobs:
   build-and-push:
+    permissions:
+        contents: read
+        packages: write
     uses: ./.github/workflows/build-controller.yml
     with:
       needs_push: ${{ inputs.needs_push }}
