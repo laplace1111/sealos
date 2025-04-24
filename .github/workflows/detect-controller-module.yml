@@ -4,13 +4,13 @@ on:
     outputs:
       modules:
         description: "JSON array of modules"
-        value: ${{ jobs.generate-matrix.outputs.modules_json }}
+        value: ${{ jobs.generate-matrix.outputs.modules }}
 
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
     outputs:
-      modules_json: ${{ steps.set-output.outputs.modules_json }}
+      modules: ${{ steps.set-output.outputs.modules }}
     strategy:
       matrix:
         module:
@@ -21,4 +21,4 @@ jobs:
         run: |
           set -eux
           MODULES_JSON=$( echo '${{ toJSON(matrix.module) }}' | jq -c )
-          echo "modules_json=$MODULES_JSON" >> "$GITHUB_OUTPUT"
+          echo "modules=$MODULES_JSON" >> "$GITHUB_OUTPUT"
