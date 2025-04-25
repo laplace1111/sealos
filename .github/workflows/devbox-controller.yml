@@ -1,0 +1,43 @@
+name: Devbox controller workflow
+
+on:
+  create:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "controllers/devbox/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "controllers/devbox/**"
+  workflow_dispatch:
+    inputs:
+      needs_push:
+        description: "Push the image after building it?"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "The tag for the image to push"
+        default: "latest"
+        required: false
+        type: string
+      needs_cluster_image:
+        description: "Build and push the cluster image after building the image?"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  default-workflow:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "devbox"
+      module_path: "devbox"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
