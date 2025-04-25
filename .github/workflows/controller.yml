@@ -30,6 +30,7 @@ jobs:
     with:
       modules: ${{ needs.detect-module.outputs.modules }}
       workdir: "controllers"
+      version: "1.22"
   build-controller-image:
     needs: [detect-module, run-linter]
     uses: ./.github/workflows/build-controller-image.yml
