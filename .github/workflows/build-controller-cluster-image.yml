@@ -3,14 +3,25 @@ name: Build (and push) controller cluster images
 on:
   workflow_call:
     inputs:
-      modules:
+      go_version:
+        description: "The Golang version used for building"
+        required: false
+        type: string
+        default: "1.22"
+      module_name:
+        description: "The name of the controller"
+        required: true
+        type: string
+      module_path:
+        description: "The path of the controller under `workdir` (it should be one of the subdirectories)"
         required: true
         type: string
       workdir:
+        description: "The directory to find the controller"
         required: true
         type: string
       needs_push:
-        description: "Should we push after building?"
+        description: "If this parameter is true, this workflow will push the image after building it"
         required: false
         type: boolean
         default: false
@@ -21,6 +32,7 @@ on:
         type: string
 jobs:
   fetch-sealos:
+    permissions: {}
     uses: ./.github/workflows/fetch-sealos.yml
     with:
       artifact_name: sealos-controllers
@@ -30,9 +42,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        module: ${{ fromJson(inputs.modules) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,7 +67,7 @@ jobs:
           IS_TAG: ${{ steps.check_tag.outputs.isTag }}
           PUSH_IMAGE_TAG: ${{ inputs.push_image_tag }}
           REPO_OWNER: ${{ github.repository_owner }}
-          MODULE_NAME: ${{ matrix.module.name }}
+          MODULE_NAME: ${{ inputs.module_name }}
         run: |
           tag_name=$(bash scripts/resolve-tag-image.sh "$PUSH_IMAGE" "$IS_TAG" "$PUSH_IMAGE_TAG")
           echo "old_docker_repo=ghcr.io/labring/sealos-${MODULE_NAME}-controller" >> $GITHUB_OUTPUT
@@ -78,7 +87,7 @@ jobs:
           sudo mv /tmp/sealos /usr/bin/sealos
           sudo sealos version
       - name: Mutate image tag in deploy files
-        working-directory: controllers/${{ matrix.module.path }}/deploy
+        working-directory: controllers/${{ inputs.module_path }}/deploy
         env:
           OLD_DOCKER_REPO: ${{ steps.prepare.outputs.old_docker_repo }}
           NEW_DOCKER_REPO: ${{ steps.prepare.outputs.new_docker_repo }}
@@ -96,8 +105,8 @@ jobs:
         run: |
           sudo sealos login -u "${REPOSITORY_OWNER}" -p "${GITHUB_TOKEN}" --debug ghcr.io
 
-      - name: Build ${{ matrix.module.name }}-controller cluster image
-        working-directory: controllers/${{ matrix.module.path }}/deploy
+      - name: Build ${{ inputs.module_name }}-controller cluster image
+        working-directory: controllers/${{ inputs.module_path }}/deploy
         env:
           CLUSTER_IMAGE: ${{ steps.prepare.outputs.cluster_image }}
           LATEST_CLUSTER_IMAGE: ${{ steps.prepare.outputs.latest_cluster_image }}

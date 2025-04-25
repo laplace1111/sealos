@@ -1,13 +1,23 @@
 
-name: Controller workflow
+name: Default controller workflow
 
 on:
   workflow_call:
     inputs:
+      module_name:
+        description: "The name of the controller"
+        required: true
+        type: string
+      module_path:
+        description: "The path of the controller under `workdir` (it should be one of the subdirectories)"
+        required: true
+        type: string
+      workdir:
+        description: "The directory to find the controller"
+        required: true
+        type: string
       needs_push:
-       # If this option is true, this workflow will push the images after building
-       # This option is required when building cluster images
-        description: "Should we push after building?"
+        description: "If this parameter is true, this workflow will push the image after building it"
         required: false
         type: boolean
         default: false
@@ -17,34 +27,33 @@ on:
         required: false
         type: string
       needs_cluster_image:
-        description: "Should we create cluster images?"
+        description: "If this parameter is true, this workflow will build and push the image after building it"
         required: false
         type: boolean
         default: false
 jobs:
-  detect-module:
-    uses: ./.github/workflows/detect-controller-module.yml
   run-linter:
-    needs: detect-module
     uses: ./.github/workflows/golangci-lint.yml
     with:
-      modules: ${{ needs.detect-module.outputs.modules }}
-      workdir: "controllers"
+      module_path: ${{ inputs.module_path }}
+      workdir: ${{ inputs.workdir }}
       version: "1.22"
   build-controller-image:
-    needs: [detect-module, run-linter]
+    needs: [run-linter]
     uses: ./.github/workflows/build-controller-image.yml
     with:
-      modules: ${{ needs.detect-module.outputs.modules }}
-      workdir: "controllers"
+      module_name: ${{ inputs.module_name }}
+      module_path: ${{ inputs.module_path }}
+      workdir: ${{ inputs.workdir }}
       needs_push: ${{ inputs.needs_push }}
       push_image_tag: ${{ inputs.push_image_tag }}
   build-controller-cluster-image:
     if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
-    needs: [detect-module, build-controller-image]
+    needs: [build-controller-image]
     uses: ./.github/workflows/build-controller-cluster-image.yml
     with:
-      modules: ${{ needs.detect-module.outputs.modules }}
-      workdir: "controllers"
+      module_name: ${{ inputs.module_name }}
+      module_path: ${{ inputs.module_path }}
+      workdir: ${{ inputs.workdir }}
       needs_push: ${{ inputs.needs_push }}
       push_image_tag: ${{ inputs.push_image_tag }} 

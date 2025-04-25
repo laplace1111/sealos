@@ -4,17 +4,24 @@ on:
   workflow_call:
     inputs:
       go_version:
+        description: "The Golang version used for building"
         required: false
         type: string
         default: "1.22"
-      modules:
+      module_name:
+        description: "The name of the controller"
+        required: true
+        type: string
+      module_path:
+        description: "The path of the controller under `workdir` (it should be one of the subdirectories)"
         required: true
         type: string
       workdir:
+        description: "The directory to find the controller"
         required: true
         type: string
       needs_push:
-        description: "Should we push after building?"
+        description: "If this parameter is true, this workflow will push the image after building it"
         required: false
         type: boolean
         default: false
@@ -27,13 +34,10 @@ jobs:
   image-build:
     runs-on: ubuntu-24.04
     permissions:
-    # If calling by prs from forked repository, this job will not be granted any write permission, 
+    # If this workflow is trigged by `pull_requests` event from forked repository, this job will not be granted any write permission, 
     # so it's safe if we set packages: write here
       contents: read
       packages: write
-    strategy:
-       matrix:
-        module: ${{ fromJSON(inputs.modules) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,21 +49,21 @@ jobs:
         with:
           go-version: ${{ inputs.go_version }}
 
-      - name: Build ${{ matrix.module.name }} amd64
-        working-directory: ${{ inputs.workdir }}/${{ matrix.module.path }}
+      - name: Build ${{ inputs.module_name }} amd64
+        working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}
         env:
-          MODULE_NAME: ${{ matrix.module.name }}
-          MODULE_PATH: ${{ matrix.module.path }}
+          MODULE_NAME: ${{ inputs.module_name }}
+          MODULE_PATH: ${{ inputs.module_path }}
         run: |
           GOARCH=amd64 TARGETARCH=amd64 make build
           mv bin/manager "bin/controller-${MODULE_NAME}-amd64"
           chmod +x "bin/controller-${MODULE_NAME}-amd64"
 
-      - name: Build ${{ matrix.module.name }} arm64
-        working-directory: ${{ inputs.workdir }}/${{ matrix.module.path }}
+      - name: Build ${{ inputs.module_name }} arm64
+        working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}
         env:
-          MODULE_NAME: ${{ matrix.module.name }}
-          MODULE_PATH: ${{ matrix.module.path }}
+          MODULE_NAME: ${{ inputs.module_name }}
+          MODULE_PATH: ${{ inputs.module_path }}
         run: |
           GOARCH=arm64 TARGETARCH=arm64 make build
           mv bin/manager "bin/controller-${MODULE_NAME}-arm64"
@@ -83,7 +87,7 @@ jobs:
           PUSH_IMAGE: ${{ inputs.needs_push }}
           IS_TAG: ${{ steps.check_tag.outputs.isTag }}
           REPO_OWNER: ${{ github.repository_owner }}
-          MODULE_NAME: ${{ matrix.module.name }}
+          MODULE_NAME: ${{ inputs.module_name }}
           PUSH_IMAGE_TAG: ${{ inputs.push_image_tag }}
         run: |
           bash scripts/resolve-tag-image.sh "$PUSH_IMAGE" "$IS_TAG" "$PUSH_IMAGE_TAG"
@@ -109,16 +113,16 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/sealos-${{ matrix.module.name }}-controller
+            ghcr.io/${{ github.repository_owner }}/sealos-${{ inputs.module_name }}-controller
           tags: |
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
             type=raw,value=${{ steps.prepare.outputs.tag_name }},enable=true
 
-      - name: build (and publish) ${{ matrix.module.name }} main image
+      - name: build (and publish) ${{ inputs.module_name }} main image
         uses: docker/build-push-action@v6
         with:
-          context: ${{ inputs.workdir }}/${{ matrix.module.path }}
-          file: ${{ inputs.workdir }}/${{ matrix.module.path }}/Dockerfile
+          context: ${{ inputs.workdir }}/${{ inputs.module_path }}
+          file: ${{ inputs.workdir }}/${{ inputs.module_path }}/Dockerfile
           push: ${{ inputs.needs_push }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

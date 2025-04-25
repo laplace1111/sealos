@@ -7,7 +7,7 @@ on:
         required: false
         type: string
         default: "1.22"
-      modules:
+      module_path:
         required: true
         type: string
       workdir:
@@ -16,11 +16,9 @@ on:
 
 jobs:
   golangci-lint:
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false    
-      matrix:
-        module: ${{ fromJSON(inputs.modules) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,5 +30,5 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64.5
-          working-directory: ${{ inputs.workdir }}/${{ matrix.module.path }}
+          working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}
           args: "--out-${NO_FUTURE}format colored-line-number"

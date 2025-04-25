@@ -1,0 +1,51 @@
+name: User controller workflow
+
+on:
+  create:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "controllers/user"
+  push:
+    branches:
+      - main
+    paths:
+      - "controllers/user"
+  workflow_dispatch:
+    inputs:
+      needs_push:
+        description: "If this parameter is true, this workflow will push the image after building it"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "The tag for the image to push"
+        default: "latest"
+        required: false
+        type: string
+      needs_cluster_image:
+        description: "If this parameter is true, this workflow will build and push the image after building it"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  WORKDIR: "controllers"
+  MODULE_NAME: "user"
+  MODULE_PATH: "user"
+
+jobs:
+  default-workflow:
+    permissions:
+    # If this workflow is trigged by `pull_requests` event from forked repository, this job will not be granted any write permission, 
+    # so it's safe if we set packages: write here
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: ${{ env.MODULE_NAME }}
+      module_path: ${{ env.MODULE_PATH  }}
+      workdir: ${{ env.WORKDIR }}
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
