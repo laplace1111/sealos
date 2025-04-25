@@ -38,6 +38,16 @@ jobs:
       pull-requests: read
     outputs:
       user: ${{ steps.filter.outputs.user }}
+      account: ${{ steps.filter.outputs.account }}
+      app: ${{ steps.filter.outputs.app }}
+      db-adminer: ${{ steps.filter.outputs.db-adminer }}
+      devbox: ${{ steps.filter.outputs.devbox }}
+      job: ${{ steps.filter.outputs.job }}
+      license: ${{ steps.filter.outputs.license }}
+      node: ${{ steps.filter.outputs.node }}
+      objectstorage: ${{ steps.filter.outputs.objectstorage }}
+      resources: ${{ steps.filter.outputs.resources }}
+      terminal: ${{ steps.filter.outputs.terminal }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,5 +66,135 @@ jobs:
     with:
       module_name: "user"
       module_path: "user"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  account-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.account == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "account"
+      module_path: "account"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  app-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.app == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "app"
+      module_path: "app"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  db-adminer-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.db-adminer == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "db-adminer"
+      module_path: "db/adminer"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  devbox-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.devbox == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "devbox"
+      module_path: "devbox"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  job-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.job == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "job"
+      module_path: "job"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  license-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.license == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "license"
+      module_path: "license"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  node-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.node == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "node"
+      module_path: "node"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  objectstorage-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.objectstorage == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "objectstorage"
+      module_path: "objectstorage"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  resources-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.resources == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "resources"
+      module_path: "resources"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  terminal-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.terminal == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "terminal"
+      module_path: "terminal"
       needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
       needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
