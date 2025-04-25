@@ -6,12 +6,12 @@ on:
     branches:
       - "*"
     paths:
-      - "controllers/user"
+      - "controllers/user/**"
   push:
     branches:
       - main
     paths:
-      - "controllers/user"
+      - "controllers/user/**"
   workflow_dispatch:
     inputs:
       needs_push:
