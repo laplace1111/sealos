@@ -14,8 +14,8 @@ on:
         type: string
       workdir:
         description: "The directory to find the controller"
-        required: true
         type: string
+        default: "controllers"
       needs_push:
         description: "If this parameter is true, this workflow will push the image after building it"
         required: false

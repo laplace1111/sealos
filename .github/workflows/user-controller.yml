@@ -30,11 +30,6 @@ on:
         type: boolean
         default: false
 
-env:
-  WORKDIR: "controllers"
-  MODULE_NAME: "user"
-  MODULE_PATH: "user"
-
 jobs:
   default-workflow:
     permissions:
@@ -44,8 +39,7 @@ jobs:
       packages: write
     uses: ./.github/workflows/controller.yml
     with:
-      module_name: ${{ env.MODULE_NAME }}
-      module_path: ${{ env.MODULE_PATH  }}
-      workdir: ${{ env.WORKDIR }}
+      module_name: "user"
+      module_path: "user"
       needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
       needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
