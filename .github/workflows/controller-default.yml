@@ -1,0 +1,60 @@
+name: Default controller workflow entry
+
+on:
+  create:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "controllers/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "controllers/**"
+  workflow_dispatch:
+    inputs:
+      needs_push:
+        description: "Push the image after building it?"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "The tag for the image to push"
+        default: "latest"
+        required: false
+        type: string
+      needs_cluster_image:
+        description: "Build and push the cluster image after building the image?"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect-controller:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      user: ${{ steps.filter.outputs.user }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        name: Filter all controllers
+        with:
+          filters: ./.github/controller-filters.yml
+  user-controller:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.user == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      module_name: "user"
+      module_path: "user"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
