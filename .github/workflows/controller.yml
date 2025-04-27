@@ -50,8 +50,9 @@ jobs:
   build-controller-cluster-image:
     if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
     needs: [build-controller-image]
-    uses: ./.github/workflows/build-controller-cluster-image.yml
+    uses: ./.github/workflows/build-cluster-image.yml
     with:
+      artifact_name: "sealos-controllers"
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
