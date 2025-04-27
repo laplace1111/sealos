@@ -1,0 +1,62 @@
+name: Default frontend workflow entry
+
+on:
+  create:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "frontend/desktop/**"
+      - "frontend/providers/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/desktop/**"
+      - "frontend/providers/**"
+  workflow_dispatch:
+    inputs:
+      needs_push:
+        description: "Push the image after building it?"
+        required: false
+        type: boolean
+        default: false
+      push_image_tag:
+        description: "The tag for the image to push"
+        default: "latest"
+        required: false
+        type: string
+      needs_cluster_image:
+        description: "Build and push the cluster image after building the image?"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect-frontend:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      license: ${{ steps.filter.outputs.license }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        name: Filter all frontends
+        with:
+          filters: ./.github/frontend-filters.yml
+  license-frontend:
+    needs: [detect-frontend]
+    if: ${{ needs.detect-frontend.outputs.license == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/frontend.yml
+    with:
+      module_name: "license"
+      module_path: "providers/license"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
