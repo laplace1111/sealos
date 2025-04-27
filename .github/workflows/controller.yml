@@ -38,23 +38,80 @@ jobs:
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
       version: "1.22"
-  build-controller-image:
-    needs: [run-linter]
+  prepare-image-info:
+    uses: ./.github/workflows/prepare-image-info.yml
+    with:
+      module_name: ${{ inputs.module_name }}
+      comp: 'controller'
+      needs_push: ${{ inputs.needs_push }}
+      push_image_tag: ${{ inputs.push_image_tag }}
+  build-image:
+    needs: [run-linter, prepare-image-info]
     uses: ./.github/workflows/build-controller-image.yml
     with:
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
       needs_push: ${{ inputs.needs_push }}
-      push_image_tag: ${{ inputs.push_image_tag }}
-  build-controller-cluster-image:
+      repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
+      tag: ${{ needs.prepare-image-info.outputs.tag_name }}
+  fetch-sealos:
     if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
-    needs: [build-controller-image]
-    uses: ./.github/workflows/build-cluster-image.yml
+    permissions: {}
+    uses: ./.github/workflows/fetch-sealos.yml
     with:
-      artifact_name: "sealos-controllers"
-      module_name: ${{ inputs.module_name }}
-      module_path: ${{ inputs.module_path }}
-      workdir: ${{ inputs.workdir }}
-      needs_push: ${{ inputs.needs_push }}
-      push_image_tag: ${{ inputs.push_image_tag }} 
+      artifact_name: "sealos"
+  build-cluster-image:
+    needs: [build-image, prepare-image-info, fetch-sealos]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download sealos
+        uses: actions/download-artifact@v4
+        with:
+          name: "sealos"
+          path: /tmp/
+      - name: Verify sealos
+        run: |
+          sudo chmod a+x /tmp/sealos
+          sudo mv /tmp/sealos /usr/bin/sealos
+          sudo sealos version
+      - name: Mutate image tag in deploy files
+        working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}/deploy
+        env:
+          OLD_DOCKER_IMAGE_NAME: "${{ needs.prepare-image-info.outputs.orig_docker_repo }}:latest"
+          NEW_DOCKER_IMAGE_NAME: "${{ needs.prepare-image-info.outputs.cur_docker_repo }}:${{ needs.prepare-image-info.outputs.tag_name }}"
+        run: |
+          sudo sed -i "s;${OLD_DOCKER_IMAGE_NAME};${NEW_DOCKER_IMAGE_NAME};" manifests/*
+      - name: Sealos login to ghcr.io
+        # if push to master, then login to ghcr.io
+        run: |
+          sudo sealos login -u "${{ github.repository_owner }}" -p "${{ secrets.GITHUB_TOKEN }}" --debug ghcr.io
+      - name: Build image for ${{ needs.prepare-image-info.outputs.cur_cluster_repo }}
+        working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}/deploy
+        env:
+          OLD_DOCKER_IMAGE: "${{ needs.prepare-image-info.outputs.orig_docker_repo }}:latest"
+          NEW_DOCKER_IMAGE: "${{ needs.prepare-image-info.outputs.cur_docker_repo }}:${{ needs.prepare-image-info.outputs.tag_name }}"
+          CLUSTER_IMAGE: "${{ needs.prepare-image-info.outputs.cur_cluster_repo }}:${{ needs.prepare-image-info.outputs.tag_name }}"
+          LATEST_CLUSTER_IMAGE: "${{ needs.prepare-image-info.outputs.cur_cluster_repo }}:latest"
+        run: |
+          sudo sed -i "s;${OLD_DOCKER_IMAGE};${NEW_DOCKER_IMAGE};" manifests/*
+          sudo sealos build -t "${CLUSTER_IMAGE}-amd64" --platform linux/amd64 -f Kubefile
+          sudo sealos build -t "${LATEST_CLUSTER_IMAGE}-amd64" --platform linux/amd64 -f Kubefile
+          # delete old registry cache
+          sudo rm -rf registry
+          sudo sealos build -t "${CLUSTER_IMAGE}-arm64" --platform linux/arm64 -f Kubefile
+          sudo sealos build -t "${LATEST_CLUSTER_IMAGE}-arm64" --platform linux/arm64 -f Kubefile
+      - name: Manifest Cluster Images
+        # if push to master, then patch images to ghcr.io
+        env:
+          OWNER: ${{ github.repository_owner }}
+          CLUSTER_IMAGE: "${{ needs.prepare-image-info.outputs.cur_cluster_repo }}:${{ needs.prepare-image-info.outputs.tag_name }}"
+          LATEST_CLUSTER_IMAGE: "${{ needs.prepare-image-info.outputs.cur_cluster_repo }}:latest"
+        run: |
+          sudo sealos images
+          bash scripts/manifest-cluster-images.sh "$CLUSTER_IMAGE"
+          bash scripts/manifest-cluster-images.sh "$LATEST_CLUSTER_IMAGE"

@@ -25,10 +25,11 @@ on:
         required: false
         type: boolean
         default: false
-      push_image_tag:
-        description: "The tag for the image to push"
-        default: "latest"
-        required: false
+      repo:
+        required: true
+        type: string
+      tag:
+        required: true
         type: string
 jobs:
   image-build:
@@ -68,31 +69,6 @@ jobs:
           GOARCH=arm64 TARGETARCH=arm64 make build
           mv bin/manager "bin/controller-${MODULE_NAME}-arm64"
           chmod +x "bin/controller-${MODULE_NAME}-arm64"
-
-      - name: Expose git commit data
-        uses: rlespinasse/git-commit-data-action@v1
-      - name: Check if tag
-        id: check_tag
-        env:
-          REF: ${{ github.ref }}
-        run: |
-          if [[ "$REF" == refs/tags/* ]]; then
-            echo "isTag=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "isTag=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Prepare
-        id: prepare
-        env:
-          PUSH_IMAGE: ${{ inputs.needs_push }}
-          IS_TAG: ${{ steps.check_tag.outputs.isTag }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          MODULE_NAME: ${{ inputs.module_name }}
-          PUSH_IMAGE_TAG: ${{ inputs.push_image_tag }}
-        run: |
-          bash scripts/resolve-tag-image.sh "$PUSH_IMAGE" "$IS_TAG" "$PUSH_IMAGE_TAG"
-          echo "docker_repo=ghcr.io/${REPO_OWNER}/sealos-${MODULE_NAME}-controller" >> $GITHUB_OUTPUT
-
       - # Add support for more platforms with QEMU (optional)
         # https://github.com/docker/setup-qemu-action
         name: Set up QEMU
@@ -113,10 +89,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/sealos-${{ inputs.module_name }}-controller
+            ${{ inputs.repo }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
-            type=raw,value=${{ steps.prepare.outputs.tag_name }},enable=true
+            type=raw,value=${{ inputs.tag }},enable=true
 
       - name: build (and publish) ${{ inputs.module_name }} main image
         uses: docker/build-push-action@v6
