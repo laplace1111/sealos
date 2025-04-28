@@ -32,22 +32,39 @@ on:
         type: boolean
         default: false
 jobs:
-  build-frontend-image:
+  prepare-image-info:
+    uses: ./.github/workflows/prepare-image-info.yml
+    with:
+      module_name: ${{ inputs.module_name }}
+      comp: 'frontend'
+      needs_push: ${{ inputs.needs_push }}
+      push_image_tag: ${{ inputs.push_image_tag }}
+  build-image:
+    needs: [prepare-image-info]
     uses: ./.github/workflows/build-frontend-image.yml
     with:
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
       needs_push: ${{ inputs.needs_push }}
-      push_image_tag: ${{ inputs.push_image_tag }}
+      repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
+      tag: ${{ needs.prepare-image-info.outputs.tag_name }}
+  fetch-sealos:
+    if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
+    permissions: {}
+    uses: ./.github/workflows/fetch-sealos.yml
+    with:
+      artifact_name: "sealos"
   build-frontend-cluster-image:
     if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
-    needs: [build-frontend-image]
+    needs: [build-image, prepare-image-info, fetch-sealos]
     uses: ./.github/workflows/build-cluster-image.yml
     with:
-      artifact_name: "sealos-frontend"
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
-      needs_push: ${{ inputs.needs_push }}
-      push_image_tag: ${{ inputs.push_image_tag }} 
+      sealos_artifact: "sealos"
+      cur_cluster_repo: ${{ needs.prepare-image-info.outputs.cur_cluster_repo }}
+      orig_docker_repo: ${{ needs.prepare-image-info.outputs.orig_docker_repo }}
+      cur_docker_repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
+      tag_name: ${{ needs.prepare-image-info.outputs.tag_name }} 
