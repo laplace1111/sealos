@@ -31,7 +31,14 @@ on:
         default: false
 
 jobs:
+  fetch-sealos:
+    if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
+    permissions: {}
+    uses: ./.github/workflows/fetch-sealos.yml
+    with:
+      artifact_name: "sealos"
   detect-controller:
+    needs: [fetch-sealos]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
