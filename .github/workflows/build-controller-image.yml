@@ -3,6 +3,10 @@ name: Build (and push) controller images
 on:
   workflow_call:
     inputs:
+      comp:
+        required: false
+        type: string
+        default: "controller"
       go_version:
         description: "The Golang version used for building"
         required: false
@@ -59,8 +63,8 @@ jobs:
         working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}
         run: |
           GOARCH=${{ matrix.arch }} TARGETARCH=${{ matrix.arch }} make build
-          mv bin/manager "bin/controller-${{ inputs.module_name }}-${{ matrix.arch }}"
-          chmod +x "bin/controller-${{ inputs.module_name }}-${{ matrix.arch }}"
+          mv bin/manager "bin/${{ inputs.comp }}-${{ inputs.module_name }}-${{ matrix.arch }}"
+          chmod +x "bin/${{ inputs.comp }}-${{ inputs.module_name }}-${{ matrix.arch }}"
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5

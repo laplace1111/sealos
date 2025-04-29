@@ -30,3 +30,6 @@ resources:
 
 terminal:
 - 'controllers/terminal/**'
+
+webhook:
+- 'webhooks/admission/**'

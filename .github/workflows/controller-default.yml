@@ -7,11 +7,13 @@ on:
       - "*"
     paths:
       - "controllers/**"
+      - "webhooks/**"
   push:
     branches:
       - main
     paths:
       - "controllers/**"
+      - "webhooks/**"
   workflow_dispatch:
     inputs:
       needs_push:
@@ -55,6 +57,7 @@ jobs:
       objectstorage: ${{ steps.filter.outputs.objectstorage }}
       resources: ${{ steps.filter.outputs.resources }}
       terminal: ${{ steps.filter.outputs.terminal }}
+      admission-webhook: ${{ steps.filter.outputs.admission-webhook }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -203,5 +206,20 @@ jobs:
     with:
       module_name: "terminal"
       module_path: "terminal"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  admission-webhook:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.admission-webhook == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/controller.yml
+    with:
+      comp: "webhook"
+      workdir: "webhooks"
+      module_name: "admission-webhook"
+      module_path: "admission-webhook"
       needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
       needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}

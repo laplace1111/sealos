@@ -8,6 +8,10 @@ on:
         description: "The name of the uploaded sealos artifact"
         type: string
         default: "sealos"
+      comp:
+        description: "The component name of the controller"
+        type: string
+        default: "controller" 
       module_name:
         description: "The name of the controller"
         required: true
@@ -46,7 +50,7 @@ jobs:
     uses: ./.github/workflows/prepare-image-info.yml
     with:
       module_name: ${{ inputs.module_name }}
-      comp: 'controller'
+      comp: ${{ inputs.comp }}
       needs_push: ${{ inputs.needs_push }}
       push_image_tag: ${{ inputs.push_image_tag }}
   build-image:
@@ -56,6 +60,7 @@ jobs:
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
+      comp: ${{ inputs.comp }}
       needs_push: ${{ inputs.needs_push }}
       repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
       tag: ${{ needs.prepare-image-info.outputs.tag_name }}
