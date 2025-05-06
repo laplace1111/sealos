@@ -33,3 +33,27 @@ terminal:
 
 webhook:
 - 'webhooks/admission/**'
+
+account-service:
+- 'services/account/**'
+
+database-service:
+- 'services/database/**'
+
+devbox-service:
+- 'services/devbox/**'
+
+exceptionmonitor-service:
+- 'services/exceptionmonitor/**'
+
+launchpad-service:
+- 'services/launchpad/**'
+
+minio-service:
+- 'services/minio/**'
+
+pay-service:
+- 'services/pay/**'
+
+vlogs-service:
+- 'services/vlogs/**'

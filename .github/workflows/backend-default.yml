@@ -8,6 +8,7 @@ on:
     paths:
       - "controllers/**"
       - "webhooks/**"
+      - "services/**"
       - "!**/*.md"
       - "!**/*.yaml"
   push:
@@ -16,6 +17,7 @@ on:
     paths:
       - "controllers/**"
       - "webhooks/**"
+      - "services/**"
       - "!**/*.md"
       - "!**/*.yaml"
   workflow_dispatch:
@@ -62,6 +64,14 @@ jobs:
       resources: ${{ steps.filter.outputs.resources }}
       terminal: ${{ steps.filter.outputs.terminal }}
       admission-webhook: ${{ steps.filter.outputs.admission-webhook }}
+      account-service: ${{ steps.filter.outputs.account-service }}
+      database-service: ${{ steps.filter.outputs.database-service }}
+      devbox-service: ${{ steps.filter.outputs.devbox-service }}
+      exceptionmonitor-service: ${{ steps.filter.outputs.exceptionmonitor-service }}
+      launchpad-service: ${{ steps.filter.outputs.launchpad-service }}
+      minio-service: ${{ steps.filter.outputs.minio-service }}
+      pay-service: ${{ steps.filter.outputs.pay-service }}
+      vlogs-service: ${{ steps.filter.outputs.vlogs-service }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -225,5 +235,109 @@ jobs:
       workdir: "webhooks"
       module_name: "admission-webhook"
       module_path: "admission-webhook"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  account-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.account-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "account-service"
+      module_path: "services/account"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  database-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.database-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "database-service"
+      module_path: "services/database"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  devbox-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.devbox-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "devbox-service"
+      module_path: "services/devbox"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  exceptionmonitor-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.exceptionmonitor-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "exceptionmonitor-service"
+      module_path: "services/exceptionmonitor"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  launchpad-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.launchpad-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "launchpad-service"
+      module_path: "services/launchpad"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  minio-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.minio-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "minio-service"
+      module_path: "services/minio"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  pay-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.pay-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "pay-service"
+      module_path: "services/pay"
+      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
+      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+
+  vlogs-service:
+    needs: [detect-backend]
+    if: ${{ needs.detect-backend.outputs.vlogs-service == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "vlogs-service"
+      module_path: "services/vlogs"
       needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
       needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
