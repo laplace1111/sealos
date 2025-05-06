@@ -4,9 +4,6 @@ name: Default frontend workflow after push
 on:
   workflow_call:
     inputs:
-      artifact_name:
-        type: string
-        default: "sealos"
       module_name:
         required: true
         type: string
@@ -40,7 +37,6 @@ jobs:
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
-      sealos_artifact: ${{ inputs.artifact_name }}
       cur_cluster_repo: ${{ needs.prepare-image-info.outputs.cur_cluster_repo }}
       orig_docker_repo: ${{ needs.prepare-image-info.outputs.orig_docker_repo }}
       cur_docker_repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
