@@ -1,41 +1,33 @@
 
-name: Default controller workflow
+name: Default backend workflow
 
 on:
   workflow_call:
     inputs:
       artifact_name:
-        description: "The name of the uploaded sealos artifact"
         type: string
         default: "sealos"
       comp:
-        description: "The component name of the controller"
         type: string
-        default: "controller" 
+        default: "backend" 
       module_name:
-        description: "The name of the controller"
         required: true
         type: string
       module_path:
-        description: "The path of the controller under `workdir` (it should be one of the subdirectories)"
         required: true
         type: string
       workdir:
-        description: "The directory to find the controller"
         type: string
         default: "controllers"
       needs_push:
-        description: "If this parameter is true, this workflow will push the image after building it"
         required: false
         type: boolean
         default: false
       push_image_tag:
-        description: "The tag for the image to push"
         default: "latest"
         required: false
         type: string
       needs_cluster_image:
-        description: "If this parameter is true, this workflow will build and push the image after building it"
         required: false
         type: boolean
         default: false
@@ -55,7 +47,7 @@ jobs:
       push_image_tag: ${{ inputs.push_image_tag }}
   build-image:
     needs: [run-linter, prepare-image-info]
-    uses: ./.github/workflows/build-controller-image.yml
+    uses: ./.github/workflows/build-backend-image.yml
     with:
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}

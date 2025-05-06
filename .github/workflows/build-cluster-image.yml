@@ -1,19 +1,16 @@
 
-name: Default controller workflow
+name: Build general cluster image
 
 on:
   workflow_call:
     inputs:
       module_name:
-        description: "The name of the controller"
         required: true
         type: string
       module_path:
-        description: "The path of the controller under `workdir` (it should be one of the subdirectories)"
         required: true
         type: string
       workdir:
-        description: "The directory to find the controller"
         type: string
         default: "controllers"
       sealos_artifact:

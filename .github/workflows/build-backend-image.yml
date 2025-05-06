@@ -1,4 +1,4 @@
-name: Build (and push) controller images
+name: Build (and push) backend images
 
 on:
   workflow_call:
@@ -8,24 +8,19 @@ on:
         type: string
         default: "controller"
       go_version:
-        description: "The Golang version used for building"
         required: false
         type: string
         default: "1.22"
       module_name:
-        description: "The name of the controller"
         required: true
         type: string
       module_path:
-        description: "The path of the controller under `workdir` (it should be one of the subdirectories)"
         required: true
         type: string
       workdir:
-        description: "The directory to find the controller"
         required: true
         type: string
       needs_push:
-        description: "If this parameter is true, this workflow will push the image after building it"
         required: false
         type: boolean
         default: false
@@ -58,7 +53,7 @@ jobs:
         uses: magnetikonline/action-golang-cache@v5
         with:
           go-version: ${{ inputs.go_version }}
-      # TODO: build the controllers in a container (with multistaged Dockerfile)
+      # TODO: build the backends in a container (with multistaged Dockerfile)
       - name: Build ${{ inputs.module_name }}
         working-directory: ${{ inputs.workdir }}/${{ inputs.module_path }}
         run: |

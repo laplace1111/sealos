@@ -5,33 +5,26 @@ on:
   workflow_call:
     inputs:
       artifact_name:
-        description: "The name of the uploaded sealos artifact"
         type: string
         default: "sealos"
       module_name:
-        description: "The name of the frontend"
         required: true
         type: string
       module_path:
-        description: "The path of the frontend under `workdir` (it should be one of the subdirectories)"
         required: true
         type: string
       workdir:
-        description: "The directory to find the frontend"
         type: string
         default: "frontend"
       needs_push:
-        description: "If this parameter is true, this workflow will push the image after building it"
         required: false
         type: boolean
         default: false
       push_image_tag:
-        description: "The tag for the image to push"
         default: "latest"
         required: false
         type: string
       needs_cluster_image:
-        description: "If this parameter is true, this workflow will build and push the image after building it"
         required: false
         type: boolean
         default: false
