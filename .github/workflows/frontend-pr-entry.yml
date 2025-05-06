@@ -1,0 +1,70 @@
+name: Default frontend workflow entry after pushing
+
+on:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "frontend/desktop/**"
+      - "frontend/providers/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
+
+jobs:
+  fetch-sealos:
+    permissions: {}
+    uses: ./.github/workflows/fetch-sealos.yml
+    with:
+      artifact_name: "sealos"
+  detect-frontend:
+    needs: [fetch-sealos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      frontends: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        name: Filter all frontends
+        with:
+          filters: ./.github/frontend-filters.yml
+  # TODO: move desktop to providers/
+  detect-desktop:
+    needs: [fetch-sealos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      desktop: ${{ steps.filter.outputs.desktop }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        name: Filter desktop
+        with:
+          filters: ./.github/desktop-filters.yml
+  provider-entry:
+    needs: [detect-frontend]
+    strategy:
+      matrix:
+        # Parse JSON array containing names of all filters matching any of changed files
+        # e.g. ['package1', 'package2'] if both package folders contains changes
+        frontend: ${{ fromJSON(needs.detect-frontend.outputs.frontends) }}
+    uses: ./.github/workflows/frontend-pr.yml
+    with:
+      module_name: "${{ matrix.frontend.name }}"
+      module_path: "providers/${{ matrix.frontend }}"
+  # TODO: move desktop to providers/
+  desktop-entry:
+    needs: [detect-desktop]
+    if: ${{ needs.detect-desktop.outputs.desktop == 'true' }}
+    uses: ./.github/workflows/frontend-pr.yml
+    with:
+      module_name: "desktop"
+      module_path: "desktop"

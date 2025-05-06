@@ -2,14 +2,6 @@ name: Default frontend workflow entry
 
 on:
   create:
-  pull_request:
-    branches:
-      - "*"
-    paths:
-      - "frontend/desktop/**"
-      - "frontend/providers/**"
-      - "!**/*.md"
-      - "!**/*.yaml"
   workflow_dispatch:
     inputs:
       needs_push:
