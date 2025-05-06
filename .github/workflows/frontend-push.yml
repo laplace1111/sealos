@@ -22,6 +22,7 @@ jobs:
     with:
       module_name: ${{ inputs.module_name }}
       comp: 'frontend'
+      needs_push: true
   build-image:
     needs: [prepare-image-info]
     uses: ./.github/workflows/build-frontend-image.yml
@@ -29,6 +30,7 @@ jobs:
       module_name: ${{ inputs.module_name }}
       module_path: ${{ inputs.module_path }}
       workdir: ${{ inputs.workdir }}
+      needs_push: true
       repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
       tag: ${{ needs.prepare-image-info.outputs.tag_name }}
   build-frontend-cluster-image:
