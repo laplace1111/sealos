@@ -8,12 +8,16 @@ on:
     paths:
       - "controllers/**"
       - "webhooks/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
   push:
     branches:
       - main
     paths:
       - "controllers/**"
       - "webhooks/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
   workflow_dispatch:
     inputs:
       needs_push:

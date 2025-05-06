@@ -8,12 +8,16 @@ on:
     paths:
       - "frontend/desktop/**"
       - "frontend/providers/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
   push:
     branches:
       - main
     paths:
       - "frontend/desktop/**"
       - "frontend/providers/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
   workflow_dispatch:
     inputs:
       needs_push:
