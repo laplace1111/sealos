@@ -1,6 +1,7 @@
 name: Default frontend workflow entry after pushing
 
 on:
+  create:
   push:
     branches:
       - main
