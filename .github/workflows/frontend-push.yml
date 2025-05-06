@@ -1,5 +1,5 @@
 
-name: Default frontend workflow
+name: Default frontend workflow after push
 
 on:
   workflow_call:
