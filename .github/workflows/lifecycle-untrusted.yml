@@ -1,0 +1,27 @@
+name: Untrusted lifecycle code workflow
+
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "*" ]
+    paths:
+        - "lifecycle/**"
+        - "!**/*.md"
+        - "!**/*.yaml"
+env:
+  PROJECT_PATH: "./lifecycle"
+
+jobs:
+  check-license:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check License
+        env:
+          PROJECT_PATH: ${{ env.PROJECT_PATH }}
+        run: cd "${PROJECT_PATH}" && make verify-license

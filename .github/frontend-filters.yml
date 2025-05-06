@@ -33,6 +33,3 @@ workorder:
 
 devbox:
 - 'frontend/providers/devbox/**'
-
-desktop:
-- 'frontend/desktop/**'

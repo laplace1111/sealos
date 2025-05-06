@@ -8,12 +8,16 @@ on:
       comp:
         required: true
         type: string
+      # TODO: rename this
       needs_push:
-        required: true
-        type: string
+        required: false
+        type: boolean
+        default: false
+      # TODO: rename this
       push_image_tag:
-        required: true
+        required: false
         type: string
+        default: ""
       orig_owner:
         required: false
         type: string
