@@ -6,15 +6,16 @@ action:
     retry: 15s
     actionName: Release
     allowOps:
-      - cuisongliu
-      - lingdie
-      - zzjin
+    - cuisongliu
+    - lingdie
+    - zzjin
+    - dinoallo
 bot:
   prefix: /
   spe: _
   allowOps:
-    - sealos-ci-robot
-    - sealos-release-robot
+  - sealos-ci-robot
+  - sealos-release-robot
   email: sealos-ci-robot@sealos.io
   username: sealos-ci-robot
 repo:
