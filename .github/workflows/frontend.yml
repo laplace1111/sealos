@@ -3,6 +3,9 @@ name: Default frontend workflow
 on:
   workflow_call:
     inputs:
+      comp:
+        type: string
+        default: "frontend" 
       module_name:
         required: true
         type: string
@@ -20,7 +23,7 @@ jobs:
     uses: ./.github/workflows/prepare-image-info.yml
     with:
       module_name: ${{ inputs.module_name }}
-      comp: ${{ inputs.module_name }}
+      comp: ${{ inputs.comp }}
       needs_push: ${{ inputs.push }}
   build-image:
     needs: [prepare-image-info]
@@ -33,6 +36,7 @@ jobs:
       repo: ${{ needs.prepare-image-info.outputs.cur_docker_repo }}
       tag: ${{ needs.prepare-image-info.outputs.tag_name }}
   build-frontend-cluster-image:
+    if: ${{ inputs.push == 'true' }}
     needs: [build-image, prepare-image-info]
     uses: ./.github/workflows/build-cluster-image.yml
     with:
