@@ -51,6 +51,7 @@ jobs:
           filters: ./.github/desktop-filters.yml
   provider-entry:
     needs: [detect-frontend]
+    if: ${{ needs.detect-frontend.outputs.frontends != '[]' && needs.detect-frontend.outputs.frontends != '' }}
     strategy:
       matrix:
         # Parse JSON array containing names of all filters matching any of changed files
