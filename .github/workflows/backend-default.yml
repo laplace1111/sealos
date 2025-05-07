@@ -44,6 +44,21 @@ jobs:
         name: Filter all backends
         with:
           filters: ./.github/controller-filters.yml
+  detect-db-controller:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      controllers: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        name: Filter all backends
+        with:
+          filters: ./.github/db-controller-filters.yml
   controller-entry:
     needs: [fetch-sealos, detect-controller]
     if: ${{ needs.detect-controller.outputs.controllers != '[]' && needs.detect-controller.outputs.controllers != '' }}
@@ -59,6 +74,24 @@ jobs:
     with:
       module_name: "${{ matrix.controller }}"
       module_path: "${{ matrix.controller }}"
+      push: ${{ github.event_name == 'push' || github.event_name == 'create' }}
+      workdir: "controllers"
+      comp: "controller"
+  db-controller-entry:
+    needs: [fetch-sealos, detect-db-controller]
+    if: ${{ needs.detect-db-controller.outputs.controllers != '[]' && needs.detect-db-controller.outputs.controllers != '' }}
+    strategy:
+      matrix:
+        # Parse JSON array containing names of all filters matching any of changed files
+        # e.g. ['package1', 'package2'] if both package folders contains changes
+        controller: ${{ fromJSON(needs.detect-db-controller.outputs.controllers) }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/backend.yml
+    with:
+      module_name: "db-${{ matrix.controller }}"
+      module_path: "db/${{ matrix.controller }}"
       push: ${{ github.event_name == 'push' || github.event_name == 'create' }}
       workdir: "controllers"
       comp: "controller"

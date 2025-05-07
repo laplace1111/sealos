@@ -7,9 +7,6 @@ account:
 app:
 - 'controllers/app/**'
 
-db/adminer:
-- 'controllers/db/adminer/**'
-
 devbox:
 - 'controllers/devbox/**'
 
