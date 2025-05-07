@@ -1,4 +1,4 @@
-name: Default frontend workflow entry after pushing
+name: Default frontend workflow entry from pull requests
 
 on:
   pull_request:
