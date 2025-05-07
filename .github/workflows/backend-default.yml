@@ -24,7 +24,6 @@ on:
 
 jobs:
   fetch-sealos:
-    if: ${{ github.event_name == 'push' || github.event_name == 'create' }}
     permissions: {}
     uses: ./.github/workflows/fetch-sealos.yml
     with:
@@ -74,7 +73,6 @@ jobs:
         name: Filter all webhooks
         with:
           filters: ./.github/webhook-filters.yml
-
   detect-service:
     runs-on: ubuntu-24.04
     permissions:
