@@ -62,9 +62,10 @@ jobs:
           SHA_TAG=${GIT_COMMIT_SHORT_SHA}
           tag_name="$SHA_TAG"
           push_image=${{ inputs.needs_push }}
+          push_image_tag=${{ inputs.push_image_tag }}
           release=${{ steps.check_tag.outputs.is_tag }}
           if [[ "$push_image" == true ]]; then
-            tag_name=${${{ inputs.push_image_tag }}:-latest}
+            tag_name=${push_image_tag:-latest}
           elif [[ "$release" == true ]]; then
             tag_name=${GITHUB_REF#refs/tags/}
           fi
