@@ -45,7 +45,7 @@ jobs:
         with:
           filters: ./.github/controller-filters.yml
   controller-entry:
-    needs: [detect-controller]
+    needs: [fetch-sealos, detect-controller]
     if: ${{ needs.detect-controller.outputs.controllers != '[]' && needs.detect-controller.outputs.controllers != '' }}
     strategy:
       matrix:

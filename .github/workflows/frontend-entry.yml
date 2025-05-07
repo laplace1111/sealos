@@ -58,7 +58,7 @@ jobs:
         with:
           filters: ./.github/desktop-filters.yml
   provider-entry:
-    needs: [detect-frontend]
+    needs: [detect-frontend, fetch-sealos]
     if: ${{ needs.detect-frontend.outputs.frontends != '[]' && needs.detect-frontend.outputs.frontends != '' }}
     strategy:
       matrix:
@@ -75,7 +75,7 @@ jobs:
       push: ${{ github.event_name == 'push' || github.event_name == 'create' }}
   # TODO: move desktop to providers/
   desktop-entry:
-    needs: [detect-desktop]
+    needs: [detect-desktop, fetch-sealos]
     if: ${{ needs.detect-desktop.outputs.desktop == 'true' }}
     permissions:
       contents: read
