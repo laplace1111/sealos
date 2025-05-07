@@ -11,13 +11,7 @@ on:
       - "!**/*.yaml"
 
 jobs:
-  fetch-sealos:
-    permissions: {}
-    uses: ./.github/workflows/fetch-sealos.yml
-    with:
-      artifact_name: "sealos"
   detect-frontend:
-    needs: [fetch-sealos]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -34,7 +28,6 @@ jobs:
           filters: ./.github/frontend-filters.yml
   # TODO: move desktop to providers/
   detect-desktop:
-    needs: [fetch-sealos]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
