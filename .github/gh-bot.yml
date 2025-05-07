@@ -17,7 +17,7 @@ bot:
   - sealos-ci-robot
   - sealos-release-robot
   email: sealos-ci-robot@sealos.io
-  username: sealos-ci-robot
+  username: dinoallo # change me
 repo:
   org: false
 
