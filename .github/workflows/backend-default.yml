@@ -2,15 +2,6 @@ name: Default backend workflow entry
 
 on:
   create:
-  pull_request:
-    branches:
-      - "*"
-    paths:
-      - "controllers/**"
-      - "webhooks/**"
-      - "services/**"
-      - "!**/*.md"
-      - "!**/*.yaml"
   push:
     branches:
       - main
@@ -20,58 +11,31 @@ on:
       - "services/**"
       - "!**/*.md"
       - "!**/*.yaml"
-  workflow_dispatch:
-    inputs:
-      needs_push:
-        description: "Push the image after building it?"
-        required: false
-        type: boolean
-        default: false
-      push_image_tag:
-        description: "The tag for the image to push"
-        default: "latest"
-        required: false
-        type: string
-      needs_cluster_image:
-        description: "Build and push the cluster image after building the image?"
-        required: false
-        type: boolean
-        default: false
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "controllers/**"
+      - "webhooks/**"
+      - "services/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
+
 
 jobs:
   fetch-sealos:
-    if: ${{ inputs.needs_cluster_image }} && ${{ inputs.needs_push }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'create' }}
     permissions: {}
     uses: ./.github/workflows/fetch-sealos.yml
     with:
       artifact_name: "sealos"
-  detect-backend:
-    needs: [fetch-sealos]
+  detect-controller:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
     outputs:
-      user: ${{ steps.filter.outputs.user }}
-      account: ${{ steps.filter.outputs.account }}
-      app: ${{ steps.filter.outputs.app }}
-      db-adminer: ${{ steps.filter.outputs.db-adminer }}
-      devbox: ${{ steps.filter.outputs.devbox }}
-      job: ${{ steps.filter.outputs.job }}
-      license: ${{ steps.filter.outputs.license }}
-      node: ${{ steps.filter.outputs.node }}
-      objectstorage: ${{ steps.filter.outputs.objectstorage }}
-      resources: ${{ steps.filter.outputs.resources }}
-      terminal: ${{ steps.filter.outputs.terminal }}
-      admission-webhook: ${{ steps.filter.outputs.admission-webhook }}
-      account-service: ${{ steps.filter.outputs.account-service }}
-      database-service: ${{ steps.filter.outputs.database-service }}
-      devbox-service: ${{ steps.filter.outputs.devbox-service }}
-      exceptionmonitor-service: ${{ steps.filter.outputs.exceptionmonitor-service }}
-      launchpad-service: ${{ steps.filter.outputs.launchpad-service }}
-      minio-service: ${{ steps.filter.outputs.minio-service }}
-      pay-service: ${{ steps.filter.outputs.pay-service }}
-      vlogs-service: ${{ steps.filter.outputs.vlogs-service }}
+      controllers: ${{ steps.filter.outputs.changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,265 +43,22 @@ jobs:
         id: filter
         name: Filter all backends
         with:
-          filters: ./.github/backend-filters.yml
-  user-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.user == 'true' }}
+          filters: ./.github/controller-filters.yml
+  controller-entry:
+    needs: [detect-controller]
+    if: ${{ needs.detect-controller.outputs.controllers != '[]' && needs.detect-controller.outputs.controllers != '' }}
+    strategy:
+      matrix:
+        # Parse JSON array containing names of all filters matching any of changed files
+        # e.g. ['package1', 'package2'] if both package folders contains changes
+        controller: ${{ fromJSON(needs.detect-controller.outputs.controllers) }}
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/backend.yml
     with:
-      module_name: "user"
-      module_path: "user"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  account-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.account == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "account"
-      module_path: "account"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  app-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.app == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "app"
-      module_path: "app"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  db-adminer-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.db-adminer == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "db-adminer"
-      module_path: "db/adminer"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  devbox-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.devbox == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "devbox"
-      module_path: "devbox"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  job-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.job == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "job"
-      module_path: "job"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  license-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.license == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "license"
-      module_path: "license"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  node-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.node == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "node"
-      module_path: "node"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  objectstorage-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.objectstorage == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "objectstorage"
-      module_path: "objectstorage"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  resources-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.resources == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "resources"
-      module_path: "resources"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  terminal-backend:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.terminal == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "terminal"
-      module_path: "terminal"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  admission-webhook:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.admission-webhook == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      comp: "webhook"
-      workdir: "webhooks"
-      module_name: "admission-webhook"
-      module_path: "admission-webhook"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  account-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.account-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "account-service"
-      module_path: "services/account"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  database-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.database-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "database-service"
-      module_path: "services/database"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  devbox-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.devbox-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "devbox-service"
-      module_path: "services/devbox"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  exceptionmonitor-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.exceptionmonitor-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "exceptionmonitor-service"
-      module_path: "services/exceptionmonitor"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  launchpad-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.launchpad-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "launchpad-service"
-      module_path: "services/launchpad"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  minio-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.minio-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "minio-service"
-      module_path: "services/minio"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  pay-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.pay-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "pay-service"
-      module_path: "services/pay"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
-
-  vlogs-service:
-    needs: [detect-backend]
-    if: ${{ needs.detect-backend.outputs.vlogs-service == 'true' }}
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/backend.yml
-    with:
-      module_name: "vlogs-service"
-      module_path: "services/vlogs"
-      needs_push: ${{ github.event_name == 'push' || github.event_name == 'create' || inputs.needs_push }}
-      needs_cluster_image: ${{ github.event_name == 'push' || github.event_name == 'create' || (inputs.needs_push && inputs.needs_cluster_image) }}
+      module_name: "${{ matrix.controller }}"
+      module_path: "${{ matrix.controller }}"
+      push: ${{ github.event_name == 'push' || github.event_name == 'create' }}
+      workdir: "controllers"
+      comp: "controller"
