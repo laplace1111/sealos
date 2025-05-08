@@ -1,3 +1,4 @@
+# Test comment
 FROM scratch
 COPY tars tars
 COPY etc etc
