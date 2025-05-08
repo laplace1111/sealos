@@ -1,16 +1,22 @@
-name: Untrusted lifecycle code workflow
-
+name: Default sealos workflow entry
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "lifecycle/**"
+      - "!**/*.md"
+      - "!**/*.yaml"
+      - "!**/*.yml"
+
   pull_request:
     branches: [ "*" ]
     paths:
         - "lifecycle/**"
         - "!**/*.md"
         - "!**/*.yaml"
-env:
-  PROJECT_PATH: "./lifecycle"
+        - "!**/*.yml"
 
 jobs:
   check-license:
@@ -20,8 +26,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Check License
         env:
-          PROJECT_PATH: ${{ env.PROJECT_PATH }}
+          PROJECT_PATH: "lifecycle"
         run: cd "${PROJECT_PATH}" && make verify-license
+  run-linter:
+    uses: ./.github/workflows/golangci-lint.yml
+    with:
+      workdir: "lifecycle"
+      module_path: ""
+      version: "1.22"
